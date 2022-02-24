@@ -2624,6 +2624,8 @@ def _process_module_builtin_defaults():
         "instrument_pymongo_collection",
     )
 
+    _process_module_definition("aredis.client", "newrelic.hooks.datastore_aredis", "instrument_aredis_client")
+
     _process_module_definition(
         "redis.connection",
         "newrelic.hooks.datastore_redis",

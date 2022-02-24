@@ -19,6 +19,7 @@ from newrelic.api.background_task import background_task
 
 from testing_support.fixtures import (validate_transaction_metrics,
     override_application_settings)
+from testing_support.fixture.event_loop import event_loop
 from testing_support.db_settings import redis_settings
 from testing_support.util import instance_hostname
 
@@ -37,15 +38,15 @@ _disable_instance_settings = {
 # Metrics
 
 _base_scoped_metrics = (
-        ('Datastore/operation/Redis/client_list', 1),
+        ('Datastore/operation/Aredis/client_list', 1),
 )
 
 _base_rollup_metrics = (
         ('Datastore/all', 1),
         ('Datastore/allOther', 1),
-        ('Datastore/Redis/all', 1),
-        ('Datastore/Redis/allOther', 1),
-        ('Datastore/operation/Redis/client_list', 1),
+        ('Datastore/Aredis/all', 1),
+        ('Datastore/Aredis/allOther', 1),
+        ('Datastore/operation/Aredis/client_list', 1),
 )
 
 _disable_scoped_metrics = list(_base_scoped_metrics)
@@ -57,7 +58,7 @@ _enable_rollup_metrics = list(_base_rollup_metrics)
 _host = instance_hostname(DB_SETTINGS['host'])
 _port = DB_SETTINGS['port']
 
-_instance_metric_name = 'Datastore/instance/Redis/%s/%s' % (_host, _port)
+_instance_metric_name = 'Datastore/instance/Aredis/%s/%s' % (_host, _port)
 
 _enable_rollup_metrics.append(
         (_instance_metric_name, 1)
@@ -67,21 +68,27 @@ _disable_rollup_metrics.append(
         (_instance_metric_name, None)
 )
 
-def exercise_redis_multi_args(client):
-    client.execute_command('CLIENT', 'LIST', parse='LIST')
+async def exercise_redis_multi_args(client):
+    await client.execute_command('CLIENT', 'LIST', parse='LIST')
 
-def exercise_redis_single_arg(client):
-    client.execute_command('CLIENT LIST')
+async def exercise_redis_single_arg(client):
+    await client.execute_command('CLIENT LIST')
 
 @override_application_settings(_enable_instance_settings)
 @validate_transaction_metrics(
-    'test_execute_command:test_strict_redis_execute_command_two_args_enable',
+    'test_execute_command:test_strict_aredis_execute_command_two_args_enable',
     scoped_metrics=_enable_scoped_metrics,
     rollup_metrics=_enable_rollup_metrics,
     background_task=True)
 @background_task()
-def test_strict_redis_execute_command_two_args_enable():
-    r = aredis.StrictRedis(host=DB_SETTINGS['host'],
+def test_strict_aredis_execute_command_two_args_enable():
+    async def _test():
+        r = aredis.StrictRedis(host=DB_SETTINGS['host'],
             port=DB_SETTINGS['port'], db=0)
-    breakpoint()
-    exercise_redis_multi_args(r)
+        await exercise_redis_multi_args(r)
+    
+    from asyncio import new_event_loop, set_event_loop
+
+    loop = new_event_loop()
+    set_event_loop(loop)
+    loop.run_until_complete(_test())
