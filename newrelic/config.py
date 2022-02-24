@@ -2627,6 +2627,12 @@ def _process_module_builtin_defaults():
     _process_module_definition("aredis.client", "newrelic.hooks.datastore_aredis", "instrument_aredis_client")
 
     _process_module_definition(
+        "aredis.connection",
+        "newrelic.hooks.datastore_aredis",
+        "instrument_aredis_connection",
+    )
+
+    _process_module_definition(
         "redis.connection",
         "newrelic.hooks.datastore_redis",
         "instrument_redis_connection",
