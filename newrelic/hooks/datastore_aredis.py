@@ -212,7 +212,7 @@ def _wrap_Aredis_method_wrapper_(module, instance_class_name, operation):
             return wrapped(*args, **kwargs)
 
         dt = DatastoreTrace(product="Aredis", target=None, operation=operation)
-
+        
         transaction._nr_datastore_instance_info = (None, None, None)
 
         with dt:
@@ -222,7 +222,6 @@ def _wrap_Aredis_method_wrapper_(module, instance_class_name, operation):
             dt.host = host
             dt.port_path_or_id = port_path_or_id
             dt.database_name = db
-
             return result
 
     name = "%s.%s" % (instance_class_name, operation)
@@ -236,5 +235,9 @@ def instrument_aredis_client(module):
             #if name in vars(module.StrictRedis)["RESPONSE_CALLBACKS"]:
                 _wrap_Aredis_method_wrapper_(module, "StrictRedis", name)
     
-    # TODO: cluster client
+    if hasattr(module, "StrictRedisCluster"):
+        for name in _aredis_client_methods:
+            if hasattr(module.StrictRedisCluster, name):
+            #if name in vars(module.StrictRedis)["RESPONSE_CALLBACKS"]:
+                _wrap_Aredis_method_wrapper_(module, "StrictRedisCluster", name)
 

@@ -92,3 +92,17 @@ def test_strict_aredis_execute_command_two_args_enable():
     loop = new_event_loop()
     set_event_loop(loop)
     loop.run_until_complete(_test())
+
+
+
+@override_application_settings(_enable_instance_settings)
+@validate_transaction_metrics(
+        'test_execute_command:test_strict_aredis_cluster_execute_command_two_args_enable',
+        scoped_metrics=_enable_scoped_metrics,
+        rollup_metrics=_enable_rollup_metrics,
+        background_task=True)
+@background_task()
+def test_strict_aredis_cluster_execute_command_two_args_enable():
+    r = aredis.StrictRedisCluster(host=DB_SETTINGS['host'],
+            port=DB_SETTINGS['port'])
+    exercise_redis_multi_args(r)
