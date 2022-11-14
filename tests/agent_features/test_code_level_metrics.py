@@ -23,7 +23,7 @@ from testing_support.validators.validate_span_events import validate_span_events
 from newrelic.api.background_task import background_task
 from newrelic.api.function_trace import FunctionTrace, FunctionTraceWrapper
 
-from _test_code_level_metrics import exercise_function, CLASS_INSTANCE, CLASS_INSTANCE_CALLABLE, exercise_lambda, exercise_partial, ExerciseClass, ExerciseClassCallable, __file__ as FILE_PATH
+from _test_code_level_metrics import exercise_function, CLASS_INSTANCE, CLASS_INSTANCE_CALLABLE, exercise_lambda, exercise_partial, ExerciseClass, ExerciseClassCallable, __file__ as FILE_PATH, TYPE_CONSTRUCTOR_CLASS_INSTANCE, TYPE_CONSTRUCTOR_CLASS_CALLABLE_INSTANCE, TYPE_CONSTRUCTOR_CLASS
 
 
 is_pypy = hasattr(sys, "pypy_version_info")
@@ -31,6 +31,7 @@ is_pypy = hasattr(sys, "pypy_version_info")
 NAMESPACE = "_test_code_level_metrics"
 CLASS_NAMESPACE = ".".join((NAMESPACE, "ExerciseClass"))
 CALLABLE_CLASS_NAMESPACE = ".".join((NAMESPACE, "ExerciseClassCallable"))
+TYPE_CONSTRUCTOR_CALLABLE_CLASS_NAMESPACE = ".".join((NAMESPACE, "ExerciseTypeConstructorCallable"))
 FUZZY_NAMESPACE = CLASS_NAMESPACE if six.PY3 else NAMESPACE
 if FILE_PATH.endswith(".pyc"):
     FILE_PATH = FILE_PATH[:-1]
@@ -98,13 +99,23 @@ def merge_dicts(A, B):
                 "code.namespace": CALLABLE_CLASS_NAMESPACE,
             },
         ),
+        (  # Callable object from type constructor
+            TYPE_CONSTRUCTOR_CLASS_CALLABLE_INSTANCE,
+            (),
+            {
+                "code.filepath": FILE_PATH,
+                "code.function": "__call__",
+                "code.lineno": 43,
+                "code.namespace": TYPE_CONSTRUCTOR_CALLABLE_CLASS_NAMESPACE,
+            }
+        ),
         (  # Lambda
             exercise_lambda,
             (),
             {
                 "code.filepath": FILE_PATH,
                 "code.function": "<lambda>",
-                "code.lineno": 40,
+                "code.lineno": 49,
                 "code.namespace": NAMESPACE,
             },
         ),
@@ -163,15 +174,6 @@ def test_code_level_metrics_callables(func, args, agents):
 @pytest.mark.parametrize(
     "obj,agents",
     (
-        (  # Class with __call__
-            ExerciseClassCallable,
-            {
-                "code.filepath": FILE_PATH,
-                "code.function": "ExerciseClassCallable",
-                "code.lineno": 33,
-                "code.namespace":NAMESPACE,
-            },
-        ),
         (  # Class without __call__
             ExerciseClass,
             {
@@ -181,7 +183,25 @@ def test_code_level_metrics_callables(func, args, agents):
                 "code.namespace": NAMESPACE,
             },
         ),
-        (  # Non-callable Object instance
+        (  # Class with __call__
+            ExerciseClassCallable,
+            {
+                "code.filepath": FILE_PATH,
+                "code.function": "ExerciseClassCallable",
+                "code.lineno": 33,
+                "code.namespace":NAMESPACE,
+            },
+        ),
+        (  # Class from type constructor
+            TYPE_CONSTRUCTOR_CLASS,
+            {
+                "code.filepath": FILE_PATH,
+                "code.function": "ExerciseTypeConstructor",
+                "code.lineno": None,
+                "code.namespace": NAMESPACE,
+            },
+        ),
+        (  # Non-callable object instance
             CLASS_INSTANCE,
             {
                 "code.filepath": FILE_PATH,
@@ -189,6 +209,15 @@ def test_code_level_metrics_callables(func, args, agents):
                 "code.lineno": 20,
                 "code.namespace": NAMESPACE,
             },
+        ),
+        (  # Non-callable object instance from type constructor
+            TYPE_CONSTRUCTOR_CLASS_INSTANCE,
+            {
+                "code.filepath": FILE_PATH,
+                "code.function": "ExerciseTypeConstructor",
+                "code.lineno": None,
+                "code.namespace": NAMESPACE,
+            }
         ),
     ),
 )

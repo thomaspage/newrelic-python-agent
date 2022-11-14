@@ -37,5 +37,14 @@ class ExerciseClassCallable():
 CLASS_INSTANCE = ExerciseClass()
 CLASS_INSTANCE_CALLABLE = ExerciseClassCallable()
 
+TYPE_CONSTRUCTOR_CLASS = type("ExerciseTypeConstructor", (object,), dict())
+TYPE_CONSTRUCTOR_CLASS_INSTANCE = TYPE_CONSTRUCTOR_CLASS()
+
+def __call__(self):
+    return
+
+TYPE_CONSTRUCTOR_CLASS_CALLABLE = type("ExerciseTypeConstructorCallable", (object,), {"__call__": __call__})
+TYPE_CONSTRUCTOR_CLASS_CALLABLE_INSTANCE = TYPE_CONSTRUCTOR_CLASS_CALLABLE()
+
 exercise_lambda = lambda: None
 exercise_partial = functools.partial(exercise_function)
