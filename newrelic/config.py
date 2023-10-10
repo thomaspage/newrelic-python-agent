@@ -2477,6 +2477,22 @@ def _process_module_builtin_defaults():
     )
 
     _process_module_definition(
+        "openai.api_resources.chat_completion",
+        "newrelic.hooks.mlmodel_openai",
+        "instrument_openai_api_resources_chat_completion",
+    )
+    _process_module_definition(
+        "openai.api_resources.embedding",
+        "newrelic.hooks.mlmodel_openai",
+        "instrument_openai_api_resources_embedding",
+    )
+    _process_module_definition(
+        "openai.util",
+        "newrelic.hooks.mlmodel_openai",
+        "instrument_openai_util",
+    )
+
+    _process_module_definition(
         "paste.httpserver",
         "newrelic.hooks.adapter_paste",
         "instrument_paste_httpserver",
