@@ -27,7 +27,21 @@ from testing_support.mock_external_http_server import MockExternalHTTPServer
 #    created by an external call.
 # 3) This app runs on a separate thread meaning it won't block the test app.
 
-RESPONSES = {}
+RESPONSES = {
+    "Command: Write me a blog about making strong business decisions as a leader.": [
+        {},
+        {
+            "inputTextTokenCount": 19,
+            "results": [
+                {
+                    "tokenCount": 128,
+                    "outputText": " Making Strong Business Decisions as a Leader\n\nAs a leader, making strong business decisions is crucial to the success of your organization. The decisions you make can have a significant impact on your team, your customers, and your overall bottom line. In this blog, we'll explore some key strategies for making effective business decisions as a leader.\n\nUnderstand the Situation\n\nBefore making any decision, it's important to take the time to fully understand the situation at hand. This means gathering as much information as possible about the problem or opportunity you're facing, and understanding the potential implications of different courses of action.\n\nConsider Alternatives\n",
+                    "completionReason": "LENGTH"
+                }
+            ]
+        }
+    ]
+}
 
 
 def simple_get(self):
@@ -66,7 +80,7 @@ def simple_get(self):
 
 
 def extract_shortened_prompt(content):
-    prompt = content.get("inputText", None)
+    prompt = content.get("inputText", None) or content.get("prompt", None)
     return prompt.lstrip().split("\n")[0]
 
 

@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import os
-import pprint
 
 import pytest
 from testing_support.fixtures import (  # noqa: F401, pylint: disable=W0611
@@ -82,31 +82,42 @@ def bedrock_server():
         )
 
         # Apply function wrappers to record data
-        # wrap_function_wrapper("bedrock.api_requestor", "APIRequestor.request", wrap_bedrock_api_requestor_request)
+        wrap_function_wrapper(
+            "botocore.client", "BaseClient._make_api_call", wrap_botocore_client_BaseClient__make_api_call
+        )
         yield client  # Run tests
 
         # Write responses to audit log
         with open(BEDROCK_AUDIT_LOG_FILE, "w") as audit_log_fp:
-            pprint.pprint(BEDROCK_AUDIT_LOG_CONTENTS, stream=audit_log_fp)
+            json.dump(BEDROCK_AUDIT_LOG_CONTENTS, fp=audit_log_fp, indent=4)
 
 
 # Intercept outgoing requests and log to file for mocking
-RECORDED_HEADERS = set(["x-request-id", "content-type"])
+RECORDED_HEADERS = set(["x-request-id", "contentType"])
 
 
-def wrap_bedrock_api_requestor_request(wrapped, instance, args, kwargs):
-    params = bind_request_params(*args, **kwargs)
+def wrap_botocore_client_BaseClient__make_api_call(wrapped, instance, args, kwargs):
+    from io import BytesIO
+    from botocore.response import StreamingBody
+
+    params = bind_make_api_call_params(*args, **kwargs)
     if not params:
         return wrapped(*args, **kwargs)
 
-    prompt = extract_shortened_prompt(params)
+    body = json.loads(params["body"])
+    prompt = extract_shortened_prompt(body)
 
     # Send request
     result = wrapped(*args, **kwargs)
 
+    # Intercept body data, and replace stream
+    streamed_body = result["body"].read()
+    result["body"] = StreamingBody(BytesIO(streamed_body), len(streamed_body))
+
     # Clean up data
-    data = result[0].data
-    headers = result[0]._headers
+    data = json.loads(streamed_body.decode("utf-8"))
+    headers = dict(result["ResponseMetadata"].items())
+    headers["contentType"] = result["contentType"]
     headers = dict(
         filter(
             lambda k: k[0].lower() in RECORDED_HEADERS or k[0].lower().startswith("x-ratelimit"),
@@ -119,5 +130,5 @@ def wrap_bedrock_api_requestor_request(wrapped, instance, args, kwargs):
     return result
 
 
-def bind_request_params(method, url, params=None, *args, **kwargs):
-    return params
+def bind_make_api_call_params(operation_name, api_params):
+    return api_params
