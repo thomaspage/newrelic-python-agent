@@ -16,13 +16,13 @@ import json
 import os
 
 import pytest
-from testing_support.fixtures import (  # noqa: F401, pylint: disable=W0611
-    collector_agent_registration_fixture,
-    collector_available_fixture,
-)
 from _mock_external_bedrock_server import (
     MockExternalBedrockServer,
     extract_shortened_prompt,
+)
+from testing_support.fixtures import (  # noqa: F401, pylint: disable=W0611
+    collector_agent_registration_fixture,
+    collector_available_fixture,
 )
 
 from newrelic.common.object_wrapper import wrap_function_wrapper
@@ -98,6 +98,7 @@ RECORDED_HEADERS = set(["x-request-id", "contentType"])
 
 def wrap_botocore_client_BaseClient__make_api_call(wrapped, instance, args, kwargs):
     from io import BytesIO
+
     from botocore.response import StreamingBody
 
     params = bind_make_api_call_params(*args, **kwargs)

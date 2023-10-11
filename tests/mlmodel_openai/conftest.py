@@ -16,16 +16,16 @@ import json
 import os
 
 import pytest
+from _mock_external_openai_server import (
+    MockExternalOpenAIServer,
+    extract_shortened_prompt,
+)
 from testing_support.fixture.event_loop import (  # noqa: F401; pylint: disable=W0611
     event_loop as loop,
 )
 from testing_support.fixtures import (  # noqa: F401, pylint: disable=W0611
     collector_agent_registration_fixture,
     collector_available_fixture,
-)
-from _mock_external_openai_server import (
-    MockExternalOpenAIServer,
-    extract_shortened_prompt,
 )
 
 from newrelic.common.object_wrapper import wrap_function_wrapper
