@@ -12,25 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pytest
 import json
 
-_test_bedrock_chat_completion_body = json.dumps(
-    {"inputText": "Command: Write me a blog about making strong business decisions as a leader.\n\nBlog:"}
-)
+_test_bedrock_chat_completion_prompt = "Write me a blog about making strong business decisions as a leader."
 
 
-def test_bedrock_chat_completion(bedrock_server):
+@pytest.mark.parametrize("model_id,payload", [
+    ("amazon.titan-text-express-v1", {"inputText": "Command: %s\n\nBlog:"}),
+    ("anthropic.claude-instant-v1", {"prompt": "Human: %s\n\nAssistant:", "max_tokens_to_sample": 500}),
+    ("ai21.j2-mid-v1", {"prompt": "%s", "maxTokens": 200}),
+    ("cohere.command-text-v14", {"prompt": "%s", "max_tokens": 200, "temperature": 0.75}),
+])
+def test_bedrock_chat_completion(bedrock_server, model_id, payload):
+    body = json.dumps(payload) % _test_bedrock_chat_completion_prompt
     response = bedrock_server.invoke_model(
-        body=_test_bedrock_chat_completion_body,
-        modelId="amazon.titan-text-express-v1",
+        body=body,
+        modelId=model_id,
         accept="application/json",
         contentType="application/json",
     )
-
-    print(f"titan large response: {response}")
     response_body = json.loads(response.get("body").read())
-    print(f"titan large body: {response_body}")
-
-    text = response_body.get("results")[0].get("outputText")
-    assert text
-    print(text)
+    assert response_body

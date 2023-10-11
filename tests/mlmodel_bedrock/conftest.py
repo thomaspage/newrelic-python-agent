@@ -105,7 +105,8 @@ def wrap_botocore_client_BaseClient__make_api_call(wrapped, instance, args, kwar
         return wrapped(*args, **kwargs)
 
     body = json.loads(params["body"])
-    prompt = extract_shortened_prompt(body)
+    model = params["modelId"]
+    prompt = extract_shortened_prompt(body, model)
 
     # Send request
     result = wrapped(*args, **kwargs)
