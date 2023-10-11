@@ -23,7 +23,7 @@ from testing_support.fixtures import (  # noqa: F401, pylint: disable=W0611
     collector_agent_registration_fixture,
     collector_available_fixture,
 )
-from testing_support.mock_external_openai_server import (
+from _mock_external_openai_server import (
     MockExternalOpenAIServer,
     extract_shortened_prompt,
 )
